@@ -1,24 +1,37 @@
-import { FC } from 'react';
-import { ContactListItem } from '../ContactListItem/ContactListItem';
+import { FC, createContext, useEffect } from 'react';
 
-import { getContacts, getFilter } from '@/redux/selectors';
+import { useAppDispatch } from '@/hooks/useAppDispatch';
+
+import { getVisibleContacts } from '@/redux/selectors';
+import { getContactsThunk } from '@/redux/operations';
 import { useSelector } from 'react-redux';
 
+import { ContactListItem } from '../ContactListItem/ContactListItem';
+
+import { ContactSingle } from '../ContactForm/ContactForm.types';
+
+export const ContactContext = createContext<ContactSingle>({
+  createdAt: '',
+  name: '',
+  phone: '',
+  id: '',
+});
+
 const ContactList: FC = () => {
-  const contacts = useSelector(getContacts);
+  const dispatch = useAppDispatch();
 
-  const filter = useSelector(getFilter);
+  useEffect(() => {
+    dispatch(getContactsThunk());
+  }, [dispatch]);
 
-  const getVisibleContacts = () => {
-    return contacts.filter(contact =>
-      contact.name.toLowerCase().includes(filter.toLowerCase())
-    );
-  };
-  console.log('getVisibleContacts(', getVisibleContacts());
+  const visibleContacts = useSelector(getVisibleContacts);
+
   return (
     <ul>
-      {getVisibleContacts().map(contact => (
-        <ContactListItem key={contact.id} {...contact} />
+      {visibleContacts.map(contact => (
+        <ContactContext.Provider value={contact} key={contact.id}>
+          <ContactListItem />
+        </ContactContext.Provider>
       ))}
     </ul>
   );

@@ -1,22 +1,37 @@
-import { FC } from 'react';
-import { ContactListItemProps } from './ContactListItem.types';
-import { useDispatch } from 'react-redux';
-import { removeContact } from '@/redux/contactSlice';
+import { FC, useContext } from 'react';
 
-export const ContactListItem: FC<ContactListItemProps> = ({
-  name,
-  number,
-  id,
-}) => {
-  const dispatch = useDispatch();
+import { removeContactThunk } from '@/redux/operations';
+
+import { MdDeleteForever, MdEdit } from 'react-icons/md';
+import { Modal } from '../Modal/Modal';
+import { useModal } from '@/hooks/useModal';
+import { ContactContext } from '../ContactList/ContactList';
+import { useAppDispatch } from '@/hooks/useAppDispatch';
+
+export const ContactListItem: FC = () => {
+  const contact = useContext(ContactContext);
+  const { name, phone, id } = contact;
+  const { isModalOpen, toggleModal } = useModal();
+  const dispatch = useAppDispatch();
 
   const handleRemoveClick = () => {
-    dispatch(removeContact(id));
+    dispatch(removeContactThunk(id));
   };
 
   return (
     <li>
-      {name} : {number} <button onClick={handleRemoveClick}>Delete</button>
+      {name} : {phone}
+      <MdDeleteForever
+        style={{ color: 'red' }}
+        size={24}
+        onClick={handleRemoveClick}
+      />
+      <MdEdit
+        onClick={() => {
+          toggleModal();
+        }}
+      />
+      {isModalOpen && <Modal toggleModal={toggleModal} />}
     </li>
   );
 };

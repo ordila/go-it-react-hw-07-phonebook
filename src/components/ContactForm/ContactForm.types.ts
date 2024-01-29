@@ -1,5 +1,11 @@
 export interface ContactSingle {
-  id: string;
+  createdAt: string;
   name: string;
-  number: string;
+  phone: string;
+  id: string;
 }
+
+export type Inputs = {
+  name: string;
+  phone: string;
+};

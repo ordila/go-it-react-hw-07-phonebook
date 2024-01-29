@@ -1,13 +1,18 @@
-import { createSlice } from '@reduxjs/toolkit';
+import { createSlice, isAnyOf } from '@reduxjs/toolkit';
+import {
+  addContactThunk,
+  editContactThunk,
+  getContactsThunk,
+  removeContactThunk,
+} from './operations';
+import { ContactSingle } from '@/components/ContactForm/ContactForm.types';
 
 const initialState = {
-  contacts: [
-    { id: 'id-1', name: 'Rosie Simpson', number: '459-12-56' },
-    { id: 'id-2', name: 'Hermione Kline', number: '443-89-12' },
-    { id: 'id-3', name: 'Eden Clements', number: '645-17-79' },
-    { id: 'id-4', name: 'Annie Copeland', number: '227-91-26' },
-    { id: 'id-5', name: 'Annie ', number: '227-91-26' },
-  ],
+  contacts: {
+    items: [] as ContactSingle[],
+    isLoading: false,
+    error: '',
+  },
   filter: '',
 };
 
@@ -16,15 +21,56 @@ const contactsSlice = createSlice({
   initialState,
   reducers: {
     addContact: (state, action) => {
-      state.contacts.push(action.payload);
+      state.contacts.items.push(action.payload);
     },
-    removeContact: (state, action) => {
-      state.contacts = state.contacts.filter(el => el.id !== action.payload);
-    },
+
     setFilter: (state, action) => {
       state.filter = action.payload;
     },
   },
+  extraReducers: builder => {
+    builder
+      .addCase(getContactsThunk.fulfilled, (state, { payload }) => {
+        if (payload) {
+          state.contacts.items = state.contacts.items.concat(payload);
+        }
+      })
+      .addCase(removeContactThunk.fulfilled, (state, { payload }) => {
+        state.contacts.items = state.contacts.items.filter(el => {
+          return el.id !== payload.id;
+        });
+      })
+      .addCase(addContactThunk.fulfilled, (state, { payload }) => {
+        if (payload) state.contacts.items.push(payload);
+      })
+      .addCase(editContactThunk.fulfilled, (state, { payload }) => {
+        if (payload) {
+          state.contacts.items = state.contacts.items.map(el => {
+            if (el.id === payload.id) {
+              return payload;
+            }
+            return el;
+          });
+        }
+      })
+      .addMatcher(
+        isAnyOf(getContactsThunk.pending, removeContactThunk.pending),
+        (state, _) => {
+          state.contacts.isLoading = true;
+          state.contacts.error = '';
+        }
+      )
+      .addMatcher(
+        isAnyOf(getContactsThunk.rejected, removeContactThunk.rejected),
+        (state, { payload }) => {
+          state.contacts.isLoading = true;
+          if (payload instanceof Error) {
+            state.contacts.error = payload.message;
+          }
+        }
+      );
+  },
 });
-export const { addContact, removeContact, setFilter } = contactsSlice.actions;
+
+export const { addContact, setFilter } = contactsSlice.actions;
 export const contactsReducer = contactsSlice.reducer;
