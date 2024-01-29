@@ -1,7 +1,6 @@
 import { ContactSingle } from '@/components/ContactForm/ContactForm.types';
 import { instance } from '@/helpers/api/instance';
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
 
 export const getContactsThunk = createAsyncThunk(
   'getAllContacts',
